@@ -1,0 +1,20 @@
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  createdAt   DateTime @default(now())
+
+  members     TeamMember[]
+  projects    Project[]
+}
+
+model TeamMember {
+  id        String  @id @default(cuid())
+  role      String
+  teamId    String
+  userId    String
+
+  team      Team   @relation(fields: [teamId], references: [id])
+  user      User   @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}

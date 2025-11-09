@@ -1,0 +1,9 @@
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  teamId      String
+  createdAt   DateTime @default(now())
+
+  team        Team     @relation(fields: [teamId], references: [id])
+  users       User[]
+}
