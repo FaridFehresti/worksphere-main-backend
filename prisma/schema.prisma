@@ -8,49 +8,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Project {
-  id          String   @id @default(cuid())
-  name        String
-  teamId      String
-  createdAt   DateTime @default(now())
-
-  team        Team     @relation(fields: [teamId], references: [id])
-  users       User[]
-}
-
-
-model Team {
-  id          String   @id @default(cuid())
-  name        String
-  createdAt   DateTime @default(now())
-
-  members     TeamMember[]
-  projects    Project[]
-}
-
-model TeamMember {
-  id        String  @id @default(cuid())
-  role      String
-  teamId    String
-  userId    String
-
-  team      Team   @relation(fields: [teamId], references: [id])
-  user      User   @relation(fields: [userId], references: [id])
-
-  @@unique([teamId, userId])
-}
-
-
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String?
-  password    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  teams       TeamMember[]
-  projects    Project[]
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
