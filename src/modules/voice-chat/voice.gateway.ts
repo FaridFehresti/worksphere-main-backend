@@ -39,7 +39,8 @@ interface SignalPayload {
 @WebSocketGateway({
   namespace: '/voice',
   cors: {
-    origin: '*', // TODO: restrict in production
+    origin: ['http://localhost:3000', 'https://faridtech.org'],
+    credentials: false, // we don't rely on cookies for auth
   },
 })
 export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
