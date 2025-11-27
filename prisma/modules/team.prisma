@@ -1,0 +1,11 @@
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  // Relations
+  members   TeamMember[]
+  roles     TeamRole[]
+  servers   Server[]
+}

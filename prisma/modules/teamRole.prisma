@@ -1,0 +1,28 @@
+model TeamRole {
+  id        String     @id @default(cuid())
+  teamId    String
+  name      String
+  isDefault Boolean     @default(false)
+
+  team        Team             @relation(fields: [teamId], references: [id])
+  permissions RolePermission[]
+  members     TeamMember[]
+}
+
+model RolePermission {
+  id          String          @id @default(cuid())
+  roleId      String
+  permission  PermissionEnum
+
+  role        TeamRole        @relation(fields: [roleId], references: [id])
+}
+
+enum PermissionEnum {
+  CREATE_SERVER
+  DELETE_SERVER
+  MANAGE_ROLES
+  MANAGE_MEMBERS
+  SEND_MESSAGES
+  MANAGE_CHANNELS
+  START_VOICE
+}

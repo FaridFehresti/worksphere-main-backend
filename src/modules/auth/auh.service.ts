@@ -1,3 +1,4 @@
+// src/modules/auth/auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -36,7 +37,44 @@ export class AuthService {
   private generateTokens(user: any) {
     const payload = { sub: user.id, email: user.email };
     return {
-      access_token: this.jwtService.sign(payload),
+      token: this.jwtService.sign(payload),
     };
+  }
+
+  // 🔥 UPDATED: accept the whole payload and use sub OR email
+  async getCurrentUserFromPayload(payload: { sub?: string; email?: string }) {
+    const { sub, email } = payload;
+
+    if (!sub && !email) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
+
+    return this.prisma.user.findUnique({
+      where: sub ? { id: sub } : { email: email! },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        memberships: {
+          select: {
+            team: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            role: {
+              select: {
+                id: true,
+                name: true,
+                permissions: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 }

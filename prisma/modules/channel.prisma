@@ -1,0 +1,14 @@
+model Channel {
+  id        String        @id @default(cuid())
+  serverId  String
+  name      String
+  type      ChannelType
+  createdAt DateTime       @default(now())
+
+  server    Server         @relation(fields: [serverId], references: [id])
+}
+
+enum ChannelType {
+  TEXT
+  VOICE
+}
