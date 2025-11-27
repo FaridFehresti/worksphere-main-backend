@@ -40,7 +40,7 @@ interface SignalPayload {
   namespace: '/voice',
   cors: {
     origin: ['http://localhost:3000', 'https://faridtech.org'],
-    credentials: false, // we don't rely on cookies for auth
+    credentials: true, // we don't rely on cookies for auth
   },
 })
 export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
