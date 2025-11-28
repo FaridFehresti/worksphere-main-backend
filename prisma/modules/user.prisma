@@ -1,11 +1,20 @@
-model User {
-  id        String        @id @default(cuid())
-  email     String        @unique
-  password  String
-  name      String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+// prisma/modules/user.prisma
 
-  // Relation side for TeamMember
+model User {
+  id          String        @id @default(cuid())
+  email       String        @unique
+  password    String
+  name        String?
+
+  username      String?       @unique
+  avatarUrl     String?       // ✅ URL to the avatar image
+  timezone      String        @default("Etc/UTC")
+  emailVerified Boolean       @default(false)
+  settings      Json          @default("{}")
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
   memberships TeamMember[]
+  passwordResetTokens PasswordResetToken[]
 }

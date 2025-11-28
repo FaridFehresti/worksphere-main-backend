@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
@@ -10,4 +10,14 @@ export class RegisterDto {
 
   @IsString()
   name: string;
+
+  // NEW: optional username/handle, matches your extended User schema
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  // NEW: optional timezone (fallback handled in service)
+  @IsOptional()
+  @IsString()
+  timezone?: string;
 }

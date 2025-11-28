@@ -2,7 +2,7 @@
 import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthService } from './auh.service';
+import { AuthService } from './auth.service'; // ✅ fix path
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
