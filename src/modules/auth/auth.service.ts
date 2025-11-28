@@ -13,8 +13,38 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  // 🔁 same shape as UsersService.userMeSelect
+  private readonly userMeSelect = {
+    id: true,
+    email: true,
+    name: true,
+    username: true,
+    avatarUrl: true,
+    timezone: true,
+    emailVerified: true,
+    settings: true,
+    createdAt: true,
+    updatedAt: true,
+    memberships: {
+      select: {
+        team: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        role: {
+          select: {
+            id: true,
+            name: true,
+            permissions: true,
+          },
+        },
+      },
+    },
+  } as const;
+
   async register(dto: RegisterDto) {
-    // Optional: soft check before hitting unique constraint
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -32,8 +62,8 @@ export class AuthService {
         name: dto.name,
         username: dto.username ?? null,
         timezone: dto.timezone ?? 'Etc/UTC',
-        // avatarUrl is null by default
-        // settings is {} by default (from Prisma)
+        // avatarUrl -> null by default
+        // settings -> {} by default (Prisma)
       },
     });
 
@@ -62,7 +92,7 @@ export class AuthService {
     };
   }
 
-  // still used by /auth/me
+  // /auth/me → full user shape
   async getCurrentUserFromPayload(payload: { sub?: string; email?: string }) {
     const { sub, email } = payload;
 
@@ -72,33 +102,7 @@ export class AuthService {
 
     return this.prisma.user.findUnique({
       where: sub ? { id: sub } : { email: email! },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        username: true,
-        avatarUrl: true,
-        timezone: true,
-        createdAt: true,
-        updatedAt: true,
-        memberships: {
-          select: {
-            team: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            role: {
-              select: {
-                id: true,
-                name: true,
-                permissions: true,
-              },
-            },
-          },
-        },
-      },
+      select: this.userMeSelect,
     });
   }
 }

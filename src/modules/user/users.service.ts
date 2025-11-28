@@ -7,19 +7,39 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // 🔁 common "me" shape – matches AuthService.getCurrentUserFromPayload
+  private readonly userMeSelect = {
+    id: true,
+    email: true,
+    name: true,
+    username: true,
+    avatarUrl: true,
+    timezone: true,
+    createdAt: true,
+    updatedAt: true,
+    memberships: {
+      select: {
+        team: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        role: {
+          select: {
+            id: true,
+            name: true,
+            permissions: true,
+          },
+        },
+      },
+    },
+  } as const;
+
   getById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        username: true,
-        avatarUrl: true,
-        timezone: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: this.userMeSelect,
     });
   }
 
@@ -35,16 +55,7 @@ export class UsersService {
         username: dto.username,
         timezone: dto.timezone,
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        username: true,
-        avatarUrl: true,
-        timezone: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: this.userMeSelect,
     });
   }
 
@@ -56,7 +67,7 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id: userId },
       data: { avatarUrl },
-      select: { id: true, avatarUrl: true },
+      select: this.userMeSelect,
     });
   }
 }
