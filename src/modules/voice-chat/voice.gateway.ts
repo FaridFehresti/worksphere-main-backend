@@ -36,6 +36,12 @@ interface SignalPayload {
   data: any;
 }
 
+interface AudioStatePayload {
+  channelId: string;
+  micMuted: boolean;
+  deafened: boolean;
+}
+
 @WebSocketGateway({
   namespace: '/voice',
   cors: {
@@ -77,7 +83,6 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.disconnect();
     }
   }
-
 
   handleDisconnect(client: Socket): void {
     const channelsLeft = this.voiceService.unregisterSocket(client.id);
@@ -124,9 +129,6 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!userId) {
         throw new UnauthorizedException('Invalid token payload (no user id)');
       }
-
-      // Optional debug:
-      // this.logger.debug(`WS authenticated user: ${userId}`);
 
       return { userId };
     } catch (e: any) {
@@ -250,6 +252,35 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.logger.debug(
       `Signal from ${client.id} -> ${targetSocketId} [${type}]`,
+    );
+  }
+
+  /* ---------------- AUDIO STATE (MUTE / DEAFEN) ---------------- */
+
+  @SubscribeMessage('audio-state')
+  handleAudioState(
+    @MessageBody() payload: AudioStatePayload,
+    @ConnectedSocket() client: Socket,
+  ): void {
+    const { channelId, micMuted, deafened } = payload;
+
+    const user = this.voiceService.getUserBySocket(client.id);
+    if (!user) {
+      throw new UnauthorizedException('Unauthenticated socket');
+    }
+
+    // Optionally, you could verify the client is actually in this channel
+    // by checking this.voiceService.getSocketsInChannel(channelId)
+
+    client.to(channelId).emit('peer-audio-state', {
+      socketId: client.id,
+      micMuted,
+      deafened,
+    });
+
+    this.logger.debug(
+      `Audio state from ${client.id} (userId=${user.userId}) in channel ${channelId}: ` +
+        `micMuted=${micMuted}, deafened=${deafened}`,
     );
   }
 }
