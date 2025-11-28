@@ -1,5 +1,9 @@
+// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './core/database/prisma/prisma.module';
 import { VoiceModule } from './modules/voice-chat/voice.module';
@@ -14,6 +18,13 @@ import { FilesModule } from './modules/files/files.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
+    // ✅ Serve static uploads
+    ServeStaticModule.forRoot({
+      rootPath: process.env.UPLOAD_DIR || join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads', // so /uploads/... maps to that folder
+    }),
+
     PrismaModule,
     AuthModule,
     VoiceModule,

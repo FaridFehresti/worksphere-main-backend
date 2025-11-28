@@ -1,43 +1,51 @@
 // src/modules/files/files.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { promises as fs } from 'fs';
 import { join } from 'path';
+import { promises as fs } from 'fs';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class FilesService {
-  private uploadRoot: string;
-  private publicBaseUrl: string;
+  private readonly uploadRoot: string;
+  private readonly publicBaseUrl: string;
 
   constructor(private readonly config: ConfigService) {
-    // Disk root for uploads (e.g. /var/worksphere/uploads)
-    this.uploadRoot =
-      this.config.get<string>('UPLOAD_DIR') || join(process.cwd(), 'uploads');
+    const envUploadDir = this.config.get<string>('UPLOAD_DIR');
+    this.uploadRoot = envUploadDir || join(process.cwd(), 'uploads');
 
-    // Base URL for building public URLs
-    this.publicBaseUrl =
-      this.config.get<string>('PUBLIC_BASE_URL') || 'http://localhost:3000';
+    const rawBase = this.config.get<string>('PUBLIC_BASE_URL') || '';
+    this.publicBaseUrl = rawBase.replace(/\/+$/, '');
   }
 
-  /**
-   * Save avatar to disk and return the public URL
-   */
+  private buildPublicUrl(relativePath: string): string {
+    const cleanRelative = relativePath.startsWith('/')
+      ? relativePath
+      : `/${relativePath}`;
+
+    if (!this.publicBaseUrl) {
+      const port = process.env.PORT ?? 5000;
+      return `http://localhost:${port}${cleanRelative}`;
+    }
+
+    return `${this.publicBaseUrl}${cleanRelative}`;
+  }
+
   async uploadAvatar(userId: string, file: any): Promise<string> {
-    // e.g. /var/worksphere/uploads/avatars/<userId>/
-    const avatarsDir = join(this.uploadRoot, 'avatars', userId);
-    await fs.mkdir(avatarsDir, { recursive: true });
+    try {
+      const avatarDir = join(this.uploadRoot, 'avatars', userId);
+      await fs.mkdir(avatarDir, { recursive: true });
 
-    const safeName = file.originalname.replace(/[^a-z0-9.\-_]/gi, '_');
-    const fileName = `${Date.now()}-${safeName}`;
-    const filePath = join(avatarsDir, fileName);
+      const ext = file.originalname.split('.').pop() || 'jpg';
+      const filename = `${Date.now()}-${randomUUID()}.${ext}`;
+      const filePath = join(avatarDir, filename);
 
-    // Multer gives us file.buffer (with memory storage)
-    await fs.writeFile(filePath, file.buffer);
+      await fs.writeFile(filePath, file.buffer);
 
-    // This path is served by ServeStaticModule at /uploads
-    const relativePath = `/uploads/avatars/${userId}/${fileName}`;
-
-    // Full URL stored in DB
-    return `${this.publicBaseUrl}${relativePath}`;
+      const relativePath = `/uploads/avatars/${userId}/${filename}`;
+      return this.buildPublicUrl(relativePath);
+    } catch (err) {
+      throw new InternalServerErrorException('Failed to save avatar');
+    }
   }
 }
