@@ -58,21 +58,26 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /* ---------------- CONNECTION / AUTH ---------------- */
 
   async handleConnection(client: Socket): Promise<void> {
+    this.logger.log(
+      `🔔 WS incoming connection: id=${client.id}, url=${client.handshake.url}`,
+    );
+
     try {
       const user = await this.authenticateClient(client);
 
       this.voiceService.registerSocket(client.id, user);
 
       this.logger.log(
-        `Client connected: ${client.id} (userId=${user.userId})`,
+        `✅ Client connected: ${client.id} (userId=${user.userId})`,
       );
     } catch (error: any) {
       this.logger.warn(
-        `Client connection rejected (${client.id}): ${error?.message}`,
+        `❌ Client connection rejected (${client.id}): ${error?.message}`,
       );
       client.disconnect();
     }
   }
+
 
   handleDisconnect(client: Socket): void {
     const channelsLeft = this.voiceService.unregisterSocket(client.id);
