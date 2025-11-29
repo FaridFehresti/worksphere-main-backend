@@ -72,12 +72,12 @@ export class UsersController {
   // ----------------- PUBLIC BY ID -----------------
 
   // Same "me" shape, but for *any* user id
-  @Get(':id')
+  @Get('by-id/:id')
   async getUserById(@Param('id') id: string) {
-    const user = await this.users.getById(id);
+  const user = await this.users.getById(id);
     if (!user) {
       throw new NotFoundException('User not found');
-    }
-    return user;
   }
+  return user;
+}
 }
