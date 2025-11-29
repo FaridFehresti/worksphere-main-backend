@@ -1,4 +1,4 @@
-// src/modules/user/users.controller.ts (or ./user/users.controller.ts)
+// src/modules/users/users.controller.ts
 import {
   Controller,
   Get,
@@ -10,6 +10,8 @@ import {
   UseInterceptors,
   Req,
   BadRequestException,
+  Param,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
@@ -33,6 +35,8 @@ export class UsersController {
     }
     return userId;
   }
+
+  // ----------------- ME -----------------
 
   @Get('me')
   async getMe(@Req() req: any) {
@@ -63,5 +67,17 @@ export class UsersController {
 
     const url = await this.files.uploadAvatar(userId, file);
     return this.users.updateAvatar(userId, url);
+  }
+
+  // ----------------- PUBLIC BY ID -----------------
+
+  // Same "me" shape, but for *any* user id
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    const user = await this.users.getById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 }
